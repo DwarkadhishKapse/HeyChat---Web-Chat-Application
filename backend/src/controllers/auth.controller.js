@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
-import { comparePassword } from "../utils/password.js";
+import { hashPassword, comparePassword } from "../utils/password.js";
 import { generateToken } from "../utils/token.js";
 
 export const signup = async (req, res) => {
@@ -27,6 +27,7 @@ export const signup = async (req, res) => {
 
     res.status(201).json({
       message: "Signup successful",
+      token,
       user: {
         id: user._id,
         name: user.name,
@@ -45,7 +46,7 @@ export const login = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
-    
+
     email = email.toLowerCase();
 
     const user = await User.findOne({ email });
@@ -72,4 +73,10 @@ export const login = async (req, res) => {
     console.error(error);
     res.status(500).json({ message: "Server Error" });
   }
+};
+
+export const getMe = (req, res) => {
+  res.status(201).json({
+    user: req.user,
+  });
 };
