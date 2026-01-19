@@ -20,14 +20,18 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    fetchMe();
+    const token = localStorage.getItem("token");
+    if (token) {
+      fetchMe();
+    } else {
+      setLoading(false);
+    }
   }, []);
+
   return (
-    <div>
-      <AuthContext.Provider value={{ user, loading }}>
-        {children}
-      </AuthContext.Provider>
-    </div>
+    <AuthContext.Provider value={{ user, loading }}>
+      {children}
+    </AuthContext.Provider>
   );
 };
 

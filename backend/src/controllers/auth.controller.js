@@ -25,9 +25,10 @@ export const signup = async (req, res) => {
       password: hashedPassword,
     });
 
+    console.log("User created successfully");
+
     res.status(201).json({
       message: "Signup successful",
-      token,
       user: {
         id: user._id,
         name: user.name,
