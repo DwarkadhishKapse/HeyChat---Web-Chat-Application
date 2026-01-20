@@ -1,0 +1,47 @@
+import Message from "../models/message.model.js";
+import Chat from "../models/chat.model.js";
+
+export const sendMessage = async (req, res) => {
+  try {
+    const { chatId, content } = req.body;
+
+    if (!chatId || !content) {
+      return res
+        .status(400)
+        .json({ message: "Chat ID and content are required" });
+    }
+
+    const message = await Message.create({
+      chat: chatId,
+      sender: req.user._id,
+      content,
+    });
+
+    // update chats last activity
+    await Chat.findByIdAndUpdate(chatId, { updatedAt: new Date() });
+
+    const fullMessage = await Message.findById(message._id)
+      .populate("sender", "name email")
+      .populate("chat");
+
+    res.status(201).json(fullMessage);
+  } catch (error) {
+    console.error("Send message error", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const getMessages = async (req, res) => {
+  try {
+    const { chatId } = req.params;
+
+    const messages = await Message.find({ chat: chatId })
+      .populate("sender", "name email")
+      .sort({ createdAt: 1 });
+
+    res.status(201).json(messages);
+  } catch (error) {
+    console.error("Get messages error", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

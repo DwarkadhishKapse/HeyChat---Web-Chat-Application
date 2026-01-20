@@ -1,30 +1,61 @@
-import React from "react";
-import ChatItem from "./ChatItem";
+import React, { useEffect, useState } from "react";
+import { getMyChats } from "../../api/chat.api";
+import { useAuth } from "../../context/AuthContext";
+import { createChat } from "../../api/chat.api";
+import UserList from "./UserList";
 
-const Sidebar = () => {
+const Sidebar = ({ selectedChat, onSelectChat }) => {
+  const { user } = useAuth();
+  const [chats, setChats] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const handleStartChat = async (user) => {
+    const chat = await createChat(user._id);
+    onSelectChat(chat);
+    setChats((prev) => {
+      const exists = prev.find((c) => c._id !== chat._id);
+      return exists ? prev : [chat, ...prev];
+    });
+  };
+  
+
+  useEffect(() => {
+    const fetchChats = async () => {
+      try {
+        const data = await getMyChats();
+        setChats(data);
+      } catch (error) {
+        console.error("Failed to load chats");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchChats();
+  }, []);
+
+  if (loading) {
+    return <div className="p-4 text-gray-500">Loading chats...</div>;
+  }
+
   return (
-    <div className="h-full flex flex-col p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold">Messages</h1>
-      </div>
+    
+    <div className="h-full">
+      {chats.map((chat) => {
+        const otherUser = chat.participants?.find((p) => p._id !== user?._id);
 
-      <input
-        type="text"
-        placeholder="Search conversations..."
-        className="mb-4 px-3 py-2 rounded-md bg-[#1a1a1a] outline-none text-sm"
-      />
-
-      <ChatItem
-        name="AI Assistant"
-        message="How can i help you today?"
-        isAI
-        active
-      />
-
-      <p className="text-xs text-gray-500 mt-6 mb-2">DIRECT MESSAGES</p>
-
-      <ChatItem name="Sarah Wilson" message="Sounds great!" />
-      <ChatItem name="James Cooper" message="I'll send the files tomorrow." />
+        return (
+          <div
+            key={chat._id}
+            onClick={() => onSelectChat(chat)}
+            className={`p-4 cursor-pointer border-b border-gray-800 ${selectedChat?._id === chat._id ? "bg-[#1f1f1f]" : "hover:bg-[#141414]"}`}
+          >
+            <p className="font-medium">{otherUser?.name || "Unknown User"}</p>
+            <p className="text-xs text-gray-400">Click to open chat</p>
+          </div>
+        );
+      })}
+      <UserList onSelectUser={handleStartChat} />
     </div>
   );
 };
