@@ -3,11 +3,15 @@ import { getMessages, sendMessage } from "../../api/message.api";
 import MessageBubble from "./MessageBubble";
 import { useAuth } from "../../context/AuthContext";
 import ChatInput from "./ChatInput";
+import { useRef } from "react";
+import { useLayoutEffect } from "react";
 
-const MessageList = ({ chatId }) => {
+const MessageList = ({ chatId, onNewMessage }) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const bottomRef = useRef(null);
 
   // this useEffect is used - whenever chat changes it load messages
   useEffect(() => {
@@ -27,6 +31,10 @@ const MessageList = ({ chatId }) => {
     fetchMessages();
   }, [chatId]);
 
+  useLayoutEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "auto" });
+  }, [messages]);
+
   const handleSendMessage = async (text) => {
     try {
       const newMessage = await sendMessage({
@@ -34,8 +42,8 @@ const MessageList = ({ chatId }) => {
         content: text,
       });
 
-      setMessages(prev => [...prev, newMessage]);
-      console.log("Sending message:", text);
+      setMessages((prev) => [...prev, newMessage]);
+      onNewMessage(chatId, newMessage.content);
     } catch (error) {
       console.error("Failed to send message");
     }
@@ -62,8 +70,10 @@ const MessageList = ({ chatId }) => {
         ))}
 
         {/* taking message input */}
+      <div ref={bottomRef}></div>
       </div>
       <ChatInput onSend={handleSendMessage} />
+
     </>
   );
 };

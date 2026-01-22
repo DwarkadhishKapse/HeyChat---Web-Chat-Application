@@ -42,7 +42,7 @@ export const getMyChats = async (req, res) => {
       participants: req.user._id,
     })
       .populate("participants", "-password")
-      .sort({ updatedAt: -1 });
+      .sort({ lastMessageAt: -1 });
 
     res.status(200).json(chats);
   } catch (error) {

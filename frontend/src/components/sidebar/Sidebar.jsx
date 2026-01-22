@@ -4,9 +4,8 @@ import { useAuth } from "../../context/AuthContext";
 import { createChat } from "../../api/chat.api";
 import UserList from "./UserList";
 
-const Sidebar = ({ selectedChat, onSelectChat }) => {
+const Sidebar = ({ chats, setChats, selectedChat, onSelectChat }) => {
   const { user } = useAuth();
-  const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const handleStartChat = async (user) => {
@@ -17,7 +16,6 @@ const Sidebar = ({ selectedChat, onSelectChat }) => {
       return exists ? prev : [chat, ...prev];
     });
   };
-  
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -39,7 +37,6 @@ const Sidebar = ({ selectedChat, onSelectChat }) => {
   }
 
   return (
-    
     <div className="h-full">
       {chats.map((chat) => {
         const otherUser = chat.participants?.find((p) => p._id !== user?._id);
@@ -51,7 +48,9 @@ const Sidebar = ({ selectedChat, onSelectChat }) => {
             className={`p-4 cursor-pointer border-b border-gray-800 ${selectedChat?._id === chat._id ? "bg-[#1f1f1f]" : "hover:bg-[#141414]"}`}
           >
             <p className="font-medium">{otherUser?.name || "Unknown User"}</p>
-            <p className="text-xs text-gray-400">Click to open chat</p>
+            <p className="text-xs text-gray-400 truncate">
+              {chat.lastMessage || "Start a conversation"}
+            </p>
           </div>
         );
       })}

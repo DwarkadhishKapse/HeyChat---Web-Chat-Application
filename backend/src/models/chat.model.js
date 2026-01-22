@@ -12,6 +12,14 @@ const chatSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    lastMessage: {
+      type: String,
+      default: "",
+    },
+    // This is used for sorting chats
+    lastMessageAt: {
+      type: Date,
+    }
   },
   { timestamps: true },
 );

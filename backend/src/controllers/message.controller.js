@@ -17,8 +17,11 @@ export const sendMessage = async (req, res) => {
       content,
     });
 
-    // update chats last activity
-    await Chat.findByIdAndUpdate(chatId, { updatedAt: new Date() });
+    // now chats always knows its latest message
+    await Chat.findByIdAndUpdate(chatId, {
+      lastMessage: content,
+      lastMessageAt: new Date(),
+    });
 
     const fullMessage = await Message.findById(message._id)
       .populate("sender", "name email")
