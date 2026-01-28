@@ -1,5 +1,6 @@
 import Message from "../models/message.model.js";
 import Chat from "../models/chat.model.js";
+import { getIO } from "../socket.js";
 
 export const sendMessage = async (req, res) => {
   try {
@@ -11,6 +12,7 @@ export const sendMessage = async (req, res) => {
         .json({ message: "Chat ID and content are required" });
     }
 
+    // creating message
     const message = await Message.create({
       chat: chatId,
       sender: req.user._id,
@@ -27,6 +29,9 @@ export const sendMessage = async (req, res) => {
       .populate("sender", "name email")
       .populate("chat");
 
+    const io = getIO();
+    io.to(chatId).emit("new-message", fullMessage);
+    
     res.status(201).json(fullMessage);
   } catch (error) {
     console.error("Send message error", error);
@@ -42,7 +47,7 @@ export const getMessages = async (req, res) => {
       .populate("sender", "name email")
       .sort({ createdAt: 1 });
 
-    res.status(201).json(messages);
+    res.status(200).json(messages);
   } catch (error) {
     console.error("Get messages error", error);
     res.status(500).json({ message: "Server error" });

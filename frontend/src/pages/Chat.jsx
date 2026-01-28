@@ -3,6 +3,8 @@ import ChatLayout from "../components/layout/ChatLayout";
 import Sidebar from "../components/sidebar/Sidebar";
 import ChatHeader from "../components/chat/ChatHeader";
 import MessageList from "../components/chat/MessageList";
+import { getMyChats } from "../api/chat.api";
+import { useEffect } from "react";
 
 const Chat = () => {
   // this state used for - select which chat is currently open
@@ -15,14 +17,34 @@ const Chat = () => {
   */
   const [chats, setChats] = useState([]);
 
+  // --------------------------------------------------
+  // Loads chat when chat page opens
+  useEffect(() => {
+    const fetchChats = async () => {
+      try {
+        const data = await getMyChats();
+        setChats(data);
+      } catch (error) {
+        console.error("Failed to load chats");
+      }
+    };
+
+    fetchChats();
+  }, []);
+
   const handleNewMessage = (chatId, lastMessage) => {
-    setChats((prevChats) =>
-      prevChats.map((chat) =>
-        chat._id === chatId
+    setChats((prevChats) => {
+      const updatedChats = prevChats.map((chat) =>
+        String(chat._id) === String(chatId)
           ? { ...chat, lastMessage, lastMessageAt: new Date() }
           : chat,
-      ),
-    );
+      );
+
+      // move updated chat to top
+      return updatedChats.sort(
+        (a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt),
+      );
+    });
   };
 
   // -----------------------------------------------------

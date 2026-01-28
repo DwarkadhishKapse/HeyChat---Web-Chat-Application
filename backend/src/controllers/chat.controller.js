@@ -8,10 +8,10 @@ export const createOrGetChat = async (req, res) => {
       return res.status(401).json({ message: "User ID is required" });
     }
 
-    // Check if chat exists
+    // Check if chat exists (exactly 2 participants)
     let chat = await Chat.findOne({
-      participants: { $all: [req.user._id, userId] },
       isGroupChat: false,
+      participants: { $size: 2, $all: [req.user._id, userId] },
     }).populate("participants", "-password");
 
     if (chat) {
@@ -19,11 +19,12 @@ export const createOrGetChat = async (req, res) => {
     }
 
     // create new chat
-    chat = await Chat.create({
+    const newChat = await Chat.create({
       participants: [req.user._id, userId],
+      isGroupChat: false,
     });
 
-    const fullChat = await Chat.findById(chat._id).populate(
+    const fullChat = await Chat.findById(newChat._id).populate(
       "participants",
       "-password",
     );
