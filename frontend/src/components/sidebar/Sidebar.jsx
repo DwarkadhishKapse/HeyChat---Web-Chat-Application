@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getMyChats, createChat } from "../../api/chat.api";
 import { useAuth } from "../../context/AuthContext";
 import UserList from "./UserList";
+import ChatHeader from "../chat/ChatHeader"
 
 const Sidebar = ({ chats, setChats, selectedChat, onSelectChat }) => {
   const { user } = useAuth();
