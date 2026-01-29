@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
+import { TypeAnimation } from "react-type-animation";
 import { getMessages, sendMessage } from "../../api/message.api";
 import MessageBubble from "./MessageBubble";
 import { useAuth } from "../../context/AuthContext";
@@ -8,10 +9,10 @@ import socket from "../../socket";
 const MessageList = ({ chatId, onNewMessage }) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
+  const [showTyping, setShowTyping] = useState(false);
   const [loading, setLoading] = useState(true);
 
   console.log("OPENED CHAT ID:", chatId);
-
 
   const bottomRef = useRef(null);
 
@@ -19,8 +20,10 @@ const MessageList = ({ chatId, onNewMessage }) => {
   useEffect(() => {
     if (!chatId) return;
 
+    setShowTyping(false)
+
     // reset state on chat change
-    setMessages([])
+    setMessages([]);
     setLoading(true);
 
     const fetchMessages = async () => {
@@ -37,9 +40,26 @@ const MessageList = ({ chatId, onNewMessage }) => {
     fetchMessages();
   }, [chatId]);
 
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("typing", () => {
+      setShowTyping(true);
+    });
+
+    socket.on("stopTyping", () => {
+      setShowTyping(false);
+    });
+
+    return () => {
+      socket.off("typing");
+      socket.off("stopTyping");
+    };
+  }, [socket]);
+
   useLayoutEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "auto" });
-  }, [messages]);
+  }, [messages, showTyping]);
 
   const handleSendMessage = async (text) => {
     try {
@@ -61,7 +81,7 @@ const MessageList = ({ chatId, onNewMessage }) => {
     socket.emit("join-chat", chatId);
   }, [chatId]);
 
-  // listen for incoming socket messages 
+  // listen for incoming socket messages
   useEffect(() => {
     if (!chatId) return;
 
@@ -75,7 +95,7 @@ const MessageList = ({ chatId, onNewMessage }) => {
       if (String(message.sender._id) === String(user._id)) return;
 
       setMessages((prev) => [...prev, message]);
-      setLoading(false)
+      setLoading(false);
       // tells Chat.jsx "I have a new message"
       onNewMessage(chatId, message.content);
     };
@@ -107,10 +127,26 @@ const MessageList = ({ chatId, onNewMessage }) => {
           />
         ))}
 
+        <div className="flex items-center">
+          {showTyping && (
+          <TypeAnimation
+            sequence={[
+              ".", 300,
+              "..", 300,
+              "...", 600,
+              "", 200
+            ]}
+            speed={99}
+            repeat={Infinity}
+            className="ml-2 text-sm text-gray-300 font-medium tracking-widest select-none"
+          />
+        )}
+        </div>
+
         {/* taking message input */}
         <div ref={bottomRef}></div>
       </div>
-      <ChatInput onSend={handleSendMessage} />
+      <ChatInput onSend={handleSendMessage} socket={socket} chatId={chatId} />
     </>
   );
 };
