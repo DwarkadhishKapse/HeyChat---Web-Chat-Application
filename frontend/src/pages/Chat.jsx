@@ -5,10 +5,13 @@ import ChatHeader from "../components/chat/ChatHeader";
 import MessageList from "../components/chat/MessageList";
 import { getMyChats } from "../api/chat.api";
 import { useEffect } from "react";
+import socket from "../socket";
 
 const Chat = () => {
   // this state used for - select which chat is currently open
   const [selectedChat, setSelectedChat] = useState(null);
+
+  const [onlineUsers, setOnlineUsers] = useState([]);
 
   // --------------------------------------------------
   /* last message show in sidebar. so, flow is this- 
@@ -30,6 +33,14 @@ const Chat = () => {
     };
 
     fetchChats();
+  }, []);
+
+  useEffect(() => {
+    socket.on("online-users", (users) => {
+      setOnlineUsers(users);
+    });
+
+    return () => socket.off("online-users");
   }, []);
 
   const handleNewMessage = (chatId, lastMessage) => {
@@ -63,7 +74,7 @@ const Chat = () => {
       chat={
         selectedChat ? (
           <>
-            <ChatHeader chat={selectedChat} />
+            <ChatHeader chat={selectedChat} onlineUsers={onlineUsers} />
             <MessageList
               chatId={selectedChat._id}
               onNewMessage={handleNewMessage}

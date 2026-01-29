@@ -22,9 +22,19 @@ const messageSchema = new mongoose.Schema(
       enum: ["text"],
       default: "text",
     },
-    isSeen: {
+    delivered: {
       type: Boolean,
       default: false,
+    },
+    deliveredAt: {
+      type: Date,
+    },
+    seen: {
+      type: Boolean,
+      default: false,
+    },
+    seenAt: {
+      type: Date,
     },
   },
   { timestamps: true },

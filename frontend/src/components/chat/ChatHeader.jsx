@@ -1,12 +1,14 @@
 import React from "react";
 import { useAuth } from "../../context/AuthContext";
 
-const ChatHeader = ({ chat }) => {
+const ChatHeader = ({ chat, onlineUsers }) => {
   const { user } = useAuth();
 
   if (!chat) return null;
 
   const otherUser = chat.participants.find((p) => p._id !== user._id);
+
+  const isOnline = onlineUsers.includes(otherUser._id);
 
   const initials = otherUser?.name
     ?.split(" ")
@@ -24,7 +26,9 @@ const ChatHeader = ({ chat }) => {
 
         <div>
           <p className="font-medium text-sm">{otherUser?.name || "Chat"}</p>
-          <p className="text-xs text-green-400">Online</p>
+          <p className="text-xs text-green-400">
+            {isOnline ? "Online" : "Offline"}
+          </p>
         </div>
       </div>
       <div className="text-gray-400 cursor-pointer text-xl">⋮</div>

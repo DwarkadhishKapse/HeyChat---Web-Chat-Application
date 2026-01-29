@@ -1,4 +1,4 @@
-import { React, useEffect } from "react";
+import { React, useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Chat from "./pages/Chat";
 import Login from "./pages/Login";
@@ -22,7 +22,13 @@ const App = () => {
       socket.disconnect();
     };
   }, [user]);
-  
+
+  useEffect(() => {
+    if (!socket || !user?._id) return;
+
+    socket.emit("setup", user._id);
+  }, [socket, user]);
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
