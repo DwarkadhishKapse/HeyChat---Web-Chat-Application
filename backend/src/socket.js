@@ -22,12 +22,9 @@ export const initSocket = (httpServer) => {
     socket.on("setup", (userId) => {
       onlineUsers.set(userId, socket.id);
       socket.userId = userId;
+      socket.join(userId); // personal room
 
       io.emit("online-users", Array.from(onlineUsers.keys()));
-    });
-
-    socket.on("setup", (userId) => {
-      socket.join(userId); // personal room
     });
 
     // here we join chat room
@@ -39,11 +36,11 @@ export const initSocket = (httpServer) => {
 
     // typing indicator
     socket.on("typing", ({ chatId }) => {
-      socket.to(chatId).emit("typing");
+      socket.to(chatId).emit("typing", {chatId});
     });
 
     socket.on("stopTyping", ({ chatId }) => {
-      socket.to(chatId).emit("stopTyping");
+      socket.to(chatId).emit("stopTyping", {chatId});
     });
 
     // If disconnect - remove user from onlineUsers list and anyone can see it

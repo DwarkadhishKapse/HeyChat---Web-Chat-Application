@@ -10,6 +10,11 @@ export const sendMessage = async (data) => {
   return res.data;
 };
 
+export const sendFileMessage = async (formData) => {
+  const res = await api.post("/messages/send-file", formData);
+  return res.data;
+};
+
 export const markAsDelivered = async (messageId) => {
   await api.post("/messages/delivered", { messageId });
 };

@@ -1,11 +1,6 @@
 import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { TypeAnimation } from "react-type-animation";
-import {
-  getMessages,
-  sendMessage,
-  markAsDelivered,
-  markSeen,
-} from "../../api/message.api";
+import { getMessages, sendMessage, sendFileMessage, markSeen } from "../../api/message.api";
 import MessageBubble from "./MessageBubble";
 import { useAuth } from "../../context/AuthContext";
 import ChatInput from "./ChatInput";
@@ -16,8 +11,6 @@ const MessageList = ({ chatId, onNewMessage }) => {
   const [messages, setMessages] = useState([]);
   const [showTyping, setShowTyping] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  console.log("OPENED CHAT ID:", chatId);
 
   const bottomRef = useRef(null);
 
@@ -34,7 +27,15 @@ const MessageList = ({ chatId, onNewMessage }) => {
     const fetchMessages = async () => {
       try {
         const data = await getMessages(chatId);
-        setMessages(data);
+
+        // IMPORTANT: delivered should NOT come from REST
+        const normalized = data.map((msg) => ({
+          ...msg,
+          delivered:
+            String(msg.sender._id) === String(user._id) ? false : msg.delivered,
+        }));
+
+        setMessages(normalized);
       } catch (error) {
         console.error("Failed to load messages");
       } finally {
@@ -43,26 +44,29 @@ const MessageList = ({ chatId, onNewMessage }) => {
     };
 
     fetchMessages();
-  }, [chatId]);
+  }, [chatId, user._id]);
 
   useEffect(() => {
-    if (!socket) return;
-
-    socket.on("typing", ({ chatId: typingChatId }) => {
+    const handleTyping = ({ chatId: typingChatId }) => {
       if (String(typingChatId) === String(chatId)) {
         setShowTyping(true);
       }
-    });
+    };
 
-    socket.on("stopTyping", () => {
-      setShowTyping(false);
-    });
+    const handleStopTyping = ({ chatId: typingChatId }) => {
+      if (String(typingChatId) === String(chatId)) {
+        setShowTyping(false);
+      }
+    };
+
+    socket.on("typing", handleTyping);
+    socket.on("stopTyping", handleStopTyping);
 
     return () => {
-      socket.off("typing");
-      socket.off("stopTyping");
+      socket.off("typing", handleTyping);
+      socket.off("stopTyping", handleStopTyping);
     };
-  }, [socket]);
+  }, [chatId]);
 
   useLayoutEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "auto" });
@@ -89,6 +93,25 @@ const MessageList = ({ chatId, onNewMessage }) => {
     }
   };
 
+  const handleSendFile = async (file) => {
+    const formData = new FormData();
+    formData.append("chatId", chatId);
+    formData.append("file", file);
+
+    try {
+      const newMessage = await sendFileMessage(formData);
+
+      setMessages((prev) => [
+        ...prev,
+        { ...newMessage, delivered: false, seen: false },
+      ]);
+
+      onNewMessage(chatId, "📎 File");
+    } catch (error) {
+      console.error("File send failed");
+    }
+  };
+
   // Join socket room when chat opens
   useEffect(() => {
     if (!chatId) return;
@@ -99,7 +122,7 @@ const MessageList = ({ chatId, onNewMessage }) => {
   useEffect(() => {
     if (!chatId) return;
 
-    const handleSocketMessage = async (message) => {
+    const handleSocketMessage = (message) => {
       console.log("RECEIVED SOCKET MESSAGE:", message);
 
       // ignore messages from other chats
@@ -111,7 +134,14 @@ const MessageList = ({ chatId, onNewMessage }) => {
       setMessages((prev) => [...prev, message]);
 
       // tells backend - message is delivered
-      await markAsDelivered(message._id);
+      socket.emit("message-delivered", {
+        messageId: message._id,
+        chatId,
+      });
+
+      // if user already in chat and message arrived
+      // so message is instantly seen
+      markSeen(chatId);
 
       setLoading(false);
       // tells Chat.jsx "I have a new message"
@@ -127,15 +157,16 @@ const MessageList = ({ chatId, onNewMessage }) => {
 
   // sender listens for delivery update
   useEffect(() => {
-    const handleDelivered = (updatedMessage) => {
-      if (String(updatedMessage.chat._id) !== String(chatId)) return;
+    const handleDelivered = ({ messageId, chatId: deliveredChatId }) => {
+      if (String(deliveredChatId) !== String(chatId)) return;
 
       setMessages((prev) =>
         prev.map((msg) =>
-          msg._id === updatedMessage._id ? { ...msg, delivered: true } : msg,
+          msg._id === messageId ? { ...msg, delivered: true } : msg,
         ),
       );
     };
+
     socket.on("message-delivered", handleDelivered);
     return () => socket.off("message-delivered", handleDelivered);
   }, [chatId]);
@@ -157,7 +188,7 @@ const MessageList = ({ chatId, onNewMessage }) => {
       setMessages((prev) =>
         prev.map((msg) =>
           String(msg.sender._id) === String(user._id)
-            ? { ...msg, seen: true }
+            ? { ...msg, seen: true, delivered: true }
             : msg,
         ),
       );
@@ -198,7 +229,7 @@ const MessageList = ({ chatId, onNewMessage }) => {
               sequence={[".", 300, "..", 300, "...", 600, "", 200]}
               speed={99}
               repeat={Infinity}
-              className="ml-2 text-sm text-gray-300 font-medium tracking-widest select-none"
+              className="ml-2 text-sm text-gray-200 font-medium tracking-widest select-none"
             />
           )}
         </div>
@@ -206,7 +237,12 @@ const MessageList = ({ chatId, onNewMessage }) => {
         {/* taking message input */}
         <div ref={bottomRef}></div>
       </div>
-      <ChatInput onSend={handleSendMessage} socket={socket} chatId={chatId} />
+      <ChatInput
+        onSend={handleSendMessage}
+        onSendFile={handleSendFile}
+        socket={socket}
+        chatId={chatId}
+      />
     </>
   );
 };

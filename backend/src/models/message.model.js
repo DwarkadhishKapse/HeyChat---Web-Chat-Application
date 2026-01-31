@@ -12,16 +12,30 @@ const messageSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    // Text Message
     content: {
       type: String,
-      required: true,
       trim: true,
+      default: "",
     },
+
+    // File -> media
+    fileUrl: {
+      type: String,
+    },
+    fileName: {
+      type: String, // can be image-png, video-mp4, application/pdf
+    },
+    fileSize: {
+      type: Number,
+    },
+
     messageType: {
       type: String,
-      enum: ["text"],
+      enum: ["text", "image", "video", "file"],
       default: "text",
     },
+
     delivered: {
       type: Boolean,
       default: false,

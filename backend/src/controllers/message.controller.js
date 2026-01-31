@@ -2,6 +2,9 @@ import Message from "../models/message.model.js";
 import Chat from "../models/chat.model.js";
 import { getIO } from "../socket.js";
 
+/* send message controller -
+  Handles - Message creation, Unread count increment, socket events
+*/
 export const sendMessage = async (req, res) => {
   try {
     const { chatId, content } = req.body;
@@ -25,17 +28,112 @@ export const sendMessage = async (req, res) => {
       lastMessageAt: new Date(),
     });
 
+    // populate message for frontend
     const fullMessage = await Message.findById(message._id)
       .populate("sender", "name email")
       .populate("chat");
 
+    // fetch chat to identify receiver
+    const chat = await Chat.findById(chatId);
+    const senderId = req.user._id.toString();
+
+    const receiverId = chat.participants.find(
+      (id) => id.toString() !== senderId,
+    );
+
+    // socket instance
     const io = getIO();
+
+    // here check if receiver is inside this chat room
+    const room = io.sockets.adapter.rooms.get(chatId);
+
+    let receiverInRoom = false;
+
+    if (room) {
+      for (const socketId of room) {
+        const socket = io.sockets.sockets.get(socketId);
+
+        if (socket?.userId === receiverId.toString()) {
+          receiverInRoom = true;
+          break;
+        }
+      }
+    }
+
+    /* Here I implement Unread logic
+      If receiver not in chat -> unread count
+      If receiver in chat -> do nothing
+    */
+
+    if (!receiverInRoom) {
+      const currentUnread = chat.unreadCount.get(receiverId.toString()) || 0;
+
+      chat.unreadCount.set(receiverId.toString(), currentUnread + 1);
+
+      await chat.save();
+
+      // notify receiver sidebar only
+      io.to(receiverId.toString()).emit("unread-count-updated", {
+        chatId,
+        unreadCount: chat.unreadCount.get(receiverId.toString()),
+      });
+    }
+
+    // Emit message to chat room
     io.to(chatId).emit("new-message", fullMessage);
+
+    console.log("Receiver in room:", receiverInRoom);
+    console.log("Unread count:", chat.unreadCount);
 
     res.status(201).json(fullMessage);
   } catch (error) {
     console.error("Send message error", error);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const sendFileMessage = async (req, res) => {
+  try {
+    const { chatId } = req.body;
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ message: "No file received" });
+    }
+
+    const messageType = file.mimetype.startsWith("image")
+      ? "image"
+      : file.mimetype.startsWith("video")
+        ? "video"
+        : "file";
+
+    const message = await Message.create({
+      chat: chatId,
+      sender: req.user._id,
+      messageType,
+      fileUrl: `/uploads/${file.filename}`,
+      fileName: file.originalname,
+      fileType: file.mimetype,
+      fileSize: file.size,
+    });
+
+    await Chat.findByIdAndUpdate(chatId, {
+      lastMessage: messageType === "file" ? "📎 File" : `📷 ${messageType}`,
+      lastMessageAt: new Date(),
+    });
+
+    const fullMessage = await Message.findById(message._id)
+      .populate("sender", "name email")
+      .populate("chat");
+
+    const io = getIO();
+
+    io.to(chatId).emit("new-message", fullMessage);
+
+    res.status(200).json(fullMessage);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "File send failed" });
   }
 };
 
@@ -83,10 +181,13 @@ export const markAsDelivered = async (req, res) => {
   }
 };
 
+/* This controller handles seen status & Unread count reset */
+
 export const markAsSeen = async (req, res) => {
   try {
     const { chatId } = req.body;
 
+    // Mark message as seen
     await Message.updateMany(
       {
         chat: chatId,
@@ -98,8 +199,23 @@ export const markAsSeen = async (req, res) => {
         seenAt: new Date(),
       },
     );
+
+    // Reset unread count for this user
+    await Chat.findByIdAndUpdate(chatId, {
+      $set: {
+        [`unreadCount.${req.user._id}`]: 0,
+      },
+    });
+
     const io = getIO();
+
+    // Notify chat - seen tick
     io.to(chatId).emit("messages-seen", { chatId });
+
+    // Notify sidebar (clear unread count)
+    io.to(req.user._id.toString()).emit("unread-count-reset", {
+      chatId,
+    });
 
     res.sendStatus(200);
   } catch (error) {

@@ -22,6 +22,10 @@ export const createOrGetChat = async (req, res) => {
     const newChat = await Chat.create({
       participants: [req.user._id, userId],
       isGroupChat: false,
+      unreadCount: {
+        [req.user._id]: 0,
+        [userId]: 0,
+      },
     });
 
     const fullChat = await Chat.findById(newChat._id).populate(

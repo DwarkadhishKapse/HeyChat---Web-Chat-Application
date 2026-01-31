@@ -19,7 +19,12 @@ const chatSchema = new mongoose.Schema(
     // This is used for sorting chats
     lastMessageAt: {
       type: Date,
-    }
+    },
+    unreadCount: {
+      type: Map,
+      of: Number,
+      default: {},
+    },
   },
   { timestamps: true },
 );

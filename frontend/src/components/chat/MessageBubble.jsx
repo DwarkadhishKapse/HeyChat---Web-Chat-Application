@@ -1,6 +1,14 @@
 import React from "react";
 
 const MessageBubble = ({ text, time, isOwn, delivered, seen }) => {
+  let status = "✓";
+
+  if (seen) {
+    status = "👀"; 
+  } else if (delivered) {
+    status = "✓✓";
+  }
+
   return (
     <div
       className={`max-w-[70%] px-4 py-2 rounded-2xl text-sm mb-2
@@ -11,12 +19,12 @@ const MessageBubble = ({ text, time, isOwn, delivered, seen }) => {
         }`}
     >
       <p>{text}</p>
-      <p className="text-[10px] text-right opacity-60 mt-1">{time}</p>
-      {isOwn && (
-        <span className="text-[10px] text-right opacity-70">
-          {delivered ? "✓" : seen ? "✓✓" : "✓"}
-        </span>
-      )}
+
+      <div className="flex justify-end items-center gap-1 mt-1">
+        <p className="text-[10px] opacity-60">{time}</p>
+
+        {isOwn && <span key={status} className="text-[10px] opacity-70 tick-animate">{status}</span>}
+      </div>
     </div>
   );
 };
