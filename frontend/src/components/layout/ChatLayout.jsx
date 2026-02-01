@@ -1,4 +1,5 @@
 import React from "react";
+import chatBg from "../../assets/chatBackground.png";
 
 const ChatLayout = ({ sidebar, chat }) => {
   return (
@@ -9,7 +10,15 @@ const ChatLayout = ({ sidebar, chat }) => {
       </div>
 
       {/* Chat area */}
-      <div className="flex-1 bg-black flex flex-col">{chat}</div>
+      <div className="flex-1 relative flex flex-col">
+        {/* Background Image */}
+        <div
+          className="absolute inset-0 bg-center bg-cover bg-no-repeat opacity-50"
+          style={{ backgroundImage: `url(${chatBg})` }}
+        />
+        <div className="absolute inset-0 bg-black/35" />
+        <div className="relative flex flex-col h-full">{chat}</div>
+      </div>
     </div>
   );
 };

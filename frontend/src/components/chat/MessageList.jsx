@@ -1,15 +1,24 @@
 import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { TypeAnimation } from "react-type-animation";
-import { getMessages, sendMessage, sendFileMessage, markSeen } from "../../api/message.api";
+import {
+  getMessages,
+  sendMessage,
+  sendFileMessage,
+  markSeen,
+} from "../../api/message.api";
 import MessageBubble from "./MessageBubble";
 import { useAuth } from "../../context/AuthContext";
 import ChatInput from "./ChatInput";
 import socket from "../../socket";
+import ImageModal from "./ImageModal";
+import VideoModal from "./VideoModal";
 
 const MessageList = ({ chatId, onNewMessage }) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [showTyping, setShowTyping] = useState(false);
+  const [previewImage, setImagePreview] = useState(null);
+  const [previewVideo, setVideoPreview] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const bottomRef = useRef(null);
@@ -212,7 +221,7 @@ const MessageList = ({ chatId, onNewMessage }) => {
         {messages.map((msg) => (
           <MessageBubble
             key={msg._id}
-            text={msg.content}
+            message={msg}
             time={new Date(msg.createdAt).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
@@ -220,6 +229,8 @@ const MessageList = ({ chatId, onNewMessage }) => {
             isOwn={String(msg.sender._id) === String(user._id)}
             delivered={msg.delivered}
             seen={msg.seen}
+            omImageClick={setImagePreview}
+            onVideoClick={setVideoPreview}
           />
         ))}
 
@@ -243,6 +254,20 @@ const MessageList = ({ chatId, onNewMessage }) => {
         socket={socket}
         chatId={chatId}
       />
+
+      {previewImage && (
+        <ImageModal
+          imageUrl={previewImage}
+          onClose={() => setImagePreview(null)}
+        />
+      )}
+
+      {previewVideo && (
+        <VideoModal
+          videoUrl={previewVideo}
+          onClose={() => setVideoPreview(null)}
+        />
+      )}
     </>
   );
 };
