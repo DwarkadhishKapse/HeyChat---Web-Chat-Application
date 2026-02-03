@@ -3,6 +3,7 @@ import http from "http";
 import app from "./app.js";
 import connectDB from "./config/db.js";
 import { initSocket } from "./socket.js";
+import { heyAIUser } from "./utils/heyAIUser.js";
 
 dotenv.config();
 
@@ -18,6 +19,8 @@ initSocket(server);
 const startServer = async () => {
   try {
     await connectDB();
+
+    await heyAIUser();
 
     server.listen(PORT, () => {
       console.log(`HeyChat server running on http://localhost:${PORT}`);

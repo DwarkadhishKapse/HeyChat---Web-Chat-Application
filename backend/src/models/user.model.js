@@ -1,5 +1,4 @@
-import mongoose, { mongo } from "mongoose";
-import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
@@ -19,6 +18,10 @@ const userSchema = new mongoose.Schema(
       required: true,
       minLength: 6,
     },
+    isAI: {
+      type: Boolean,
+      default: false,
+    },
     avatar: {
       type: String,
       default: "",
@@ -28,7 +31,7 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const User = mongoose.model("User", userSchema);

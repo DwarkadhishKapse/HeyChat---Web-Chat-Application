@@ -1,4 +1,5 @@
 import Chat from "../models/chat.model.js";
+import { heyAIUser } from "../utils/heyAIUser.js";
 
 export const createOrGetChat = async (req, res) => {
   try {
@@ -11,6 +12,8 @@ export const createOrGetChat = async (req, res) => {
     // Check if chat exists (exactly 2 participants)
     let chat = await Chat.findOne({
       isGroupChat: false,
+
+      // size: 2 guarantees 1 to 1 chat
       participants: { $size: 2, $all: [req.user._id, userId] },
     }).populate("participants", "-password");
 
@@ -19,13 +22,15 @@ export const createOrGetChat = async (req, res) => {
     }
 
     // create new chat
-    const newChat = await Chat.create({
+    await Chat.create({
       participants: [req.user._id, userId],
       isGroupChat: false,
       unreadCount: {
         [req.user._id]: 0,
         [userId]: 0,
       },
+      lastMessage: "HeyAI is ready 🤖",
+      lastMessageAt: new Date(),
     });
 
     const fullChat = await Chat.findById(newChat._id).populate(
@@ -42,6 +47,24 @@ export const createOrGetChat = async (req, res) => {
 
 export const getMyChats = async (req, res) => {
   try {
+    const heyAI = await heyAIUser();
+
+    const existingChat = await Chat.findOne({
+      isGroupChat: false,
+      participants: { $size: 2, $all: [req.user._id, heyAI._id] },
+    });
+
+    if (!existingChat) {
+      await Chat.create({
+        participants: [req.user._id, heyAI._id],
+        isGroupChat: false,
+        unreadCount: {
+          [req.user._id]: 0,
+          [heyAI._id]: 0,
+        },
+      });
+    }
+
     const chats = await Chat.find({
       // find chat where im participate
       participants: req.user._id,

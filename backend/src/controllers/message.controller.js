@@ -1,6 +1,8 @@
 import Message from "../models/message.model.js";
 import Chat from "../models/chat.model.js";
 import { getIO } from "../socket.js";
+import User from "../models/user.model.js";
+import { triggerAIResponse } from "../services/ai/aiTrigger.service.js";
 
 /* send message controller -
   Handles - Message creation, Unread count increment, socket events
@@ -82,10 +84,19 @@ export const sendMessage = async (req, res) => {
     // Emit message to chat room
     io.to(chatId).emit("new-message", fullMessage);
 
-    console.log("Receiver in room:", receiverInRoom);
-    console.log("Unread count:", chat.unreadCount);
-
     res.status(201).json(fullMessage);
+
+    const receiver = await User.findById(receiverId);
+
+    if (receiver.isAI && !req.user.isAI) {
+      triggerAIResponse({
+        chatId,
+        senderId: req.user._id,
+        message: content,
+      }).catch((error) => {
+        console.error("AI trigger failed:", err);
+      });
+    }
   } catch (error) {
     console.error("Send message error", error);
     res.status(500).json({ message: "Server error" });
