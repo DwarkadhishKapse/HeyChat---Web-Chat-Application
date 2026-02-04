@@ -23,7 +23,7 @@ const startServer = async () => {
     await heyAIUser();
 
     server.listen(PORT, () => {
-      console.log(`HeyChat server running on http://localhost:${PORT}`);
+      console.log(`HeyChat server running on port ${PORT}`);
     });
   } catch (error) {
     console.error("Failed to start server:", error);

@@ -9,7 +9,7 @@ const onlineUsers = new Map();
 export const initSocket = (httpServer) => {
   io = new Server(httpServer, {
     cors: {
-      origin: process.env.CLIENT_URL,
+      origin: process.env.CLIENT_URL?.split(","),
       credentials: true,
     },
   });
@@ -31,7 +31,7 @@ export const initSocket = (httpServer) => {
   });
 
   io.on("connection", (socket) => {
-    console.log("Socket connected:", socket.id);
+    console.log("Socket connected:", socket.id, "User:", socket.userId);
 
     // When user connects mark - online
     // Meaning: userId saved as online
