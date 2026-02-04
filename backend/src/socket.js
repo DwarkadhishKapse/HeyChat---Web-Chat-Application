@@ -1,4 +1,5 @@
 import { Server } from "socket.io";
+import jwt from "jsonwebtoken";
 
 let io;
 
@@ -8,9 +9,25 @@ const onlineUsers = new Map();
 export const initSocket = (httpServer) => {
   io = new Server(httpServer, {
     cors: {
-      origin: "http://localhost:5173",
+      origin: process.env.CLIENT_URL,
       credentials: true,
     },
+  });
+
+  io.use((socket, next) => {
+    const token = socket.handshake.auth?.token;
+
+    if (!token) {
+      return next(new Error("No token provided"));
+    }
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      socket.userId = decoded.userId;
+      next();
+    } catch (error) {
+      return next(new Error("Invalid token"));
+    }
   });
 
   io.on("connection", (socket) => {
@@ -19,13 +36,10 @@ export const initSocket = (httpServer) => {
     // When user connects mark - online
     // Meaning: userId saved as online
     // shows onlineUsers list to everyone
-    socket.on("setup", (userId) => {
-      onlineUsers.set(userId, socket.id);
-      socket.userId = userId;
-      socket.join(userId); // personal room
+    onlineUsers.set(socket.userId, socket.id);
+    socket.join(socket.userId); // personal room
 
-      io.emit("online-users", Array.from(onlineUsers.keys()));
-    });
+    io.emit("online-users", Array.from(onlineUsers.keys()));
 
     // here we join chat room
     socket.on("join-chat", (chatId) => {
@@ -36,11 +50,11 @@ export const initSocket = (httpServer) => {
 
     // typing indicator
     socket.on("typing", ({ chatId, username }) => {
-      socket.to(chatId).emit("typing", {chatId, username});
+      socket.to(chatId).emit("typing", { chatId, username });
     });
 
     socket.on("stopTyping", ({ chatId }) => {
-      socket.to(chatId).emit("stopTyping", {chatId});
+      socket.to(chatId).emit("stopTyping", { chatId });
     });
 
     // If disconnect - remove user from onlineUsers list and anyone can see it

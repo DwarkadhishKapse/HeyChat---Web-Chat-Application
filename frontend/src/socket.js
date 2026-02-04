@@ -1,11 +1,11 @@
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:5000", {
+const socket = io(import.meta.env.VITE_API_URL, {
   autoConnect: false,
-  transports: ["websocket"], // force stable connection
+  transports: ["websocket"], // stable on Render
   auth: {
-    token: localStorage.getItem("token")
-  }
+    token: localStorage.getItem("token"),
+  },
 });
 
 export default socket;
