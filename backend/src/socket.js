@@ -35,8 +35,8 @@ export const initSocket = (httpServer) => {
     });
 
     // typing indicator
-    socket.on("typing", ({ chatId }) => {
-      socket.to(chatId).emit("typing", {chatId});
+    socket.on("typing", ({ chatId, username }) => {
+      socket.to(chatId).emit("typing", {chatId, username});
     });
 
     socket.on("stopTyping", ({ chatId }) => {

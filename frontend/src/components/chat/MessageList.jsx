@@ -17,6 +17,8 @@ const MessageList = ({ chatId, onNewMessage }) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [showTyping, setShowTyping] = useState(false);
+  const [typingUser, setTypingUser] = useState(null);
+  const [isAITyping, setIsAITyping] = useState(false);
   const [previewImage, setImagePreview] = useState(null);
   const [previewVideo, setVideoPreview] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -56,15 +58,17 @@ const MessageList = ({ chatId, onNewMessage }) => {
   }, [chatId, user._id]);
 
   useEffect(() => {
-    const handleTyping = ({ chatId: typingChatId }) => {
+    const handleTyping = ({ chatId: typingChatId, username }) => {
       if (String(typingChatId) === String(chatId)) {
         setShowTyping(true);
+        setTypingUser(username);
       }
     };
 
-    const handleStopTyping = ({ chatId: typingChatId }) => {
+    const handleStopTyping = ({ chatId: typingChatId, username }) => {
       if (String(typingChatId) === String(chatId)) {
         setShowTyping(false);
+        setTypingUser(null);
       }
     };
 
@@ -77,9 +81,31 @@ const MessageList = ({ chatId, onNewMessage }) => {
     };
   }, [chatId]);
 
+  useEffect(() => {
+    const handleAITypingStart = ({ chatId: typingChatId }) => {
+      if (String(typingChatId) === String(chatId)) {
+        setIsAITyping(true);
+      }
+    };
+
+    const handleAITypingStop = ({ chatId: typingChatId }) => {
+      if (String(typingChatId) === String(chatId)) {
+        setIsAITyping(false);
+      }
+    };
+
+    socket.on("ai-typing-start", handleAITypingStart);
+    socket.on("ai-typing-stop", handleAITypingStop);
+
+    return () => {
+      socket.off("ai-typing-start", handleAITypingStart);
+      socket.off("ai-typing-stop", handleAITypingStop);
+    };
+  }, [chatId]);
+
   useLayoutEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "auto" });
-  }, [messages, showTyping]);
+  }, [messages, showTyping, isAITyping]);
 
   const handleSendMessage = async (text) => {
     try {
@@ -234,16 +260,29 @@ const MessageList = ({ chatId, onNewMessage }) => {
           />
         ))}
 
-        <div className="flex items-center">
-          {showTyping && (
+        {showTyping && typingUser && (
+          <div className="flex items-center ml-2 text-sm text-gray-300">
+            <span className="mr-1">{typingUser}</span>
             <TypeAnimation
               sequence={[".", 300, "..", 300, "...", 600, "", 200]}
               speed={99}
               repeat={Infinity}
-              className="ml-2 text-sm text-gray-200 font-medium tracking-widest select-none"
+              className="tracking-widest select-none"
             />
-          )}
-        </div>
+          </div>
+        )}
+
+        {isAITyping && (
+          <div className="ml-2 text-sm text-gray-300 italic">
+            HeyAI is typing
+            <TypeAnimation
+              sequence={[".", 300, "..", 300, "...", 600, "", 200]}
+              speed={99}
+              repeat={Infinity}
+              className="inline-block ml-1 tracking-widest select-none"
+            />
+          </div>
+        )}
 
         {/* taking message input */}
         <div ref={bottomRef}></div>

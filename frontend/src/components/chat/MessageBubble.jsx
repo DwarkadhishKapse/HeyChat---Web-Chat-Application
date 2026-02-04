@@ -1,4 +1,5 @@
 import React from "react";
+import ReactMarkDown from "react-markdown";
 
 const MessageBubble = ({
   message,
@@ -28,7 +29,11 @@ const MessageBubble = ({
         }`}
     >
       {/* text message */}
-      {messageType === "text" && <p className="break-word">{content}</p>}
+      {messageType === "text" && (
+        <div className="prose prose-invert max-w-none text-sm">
+          <ReactMarkDown>{content}</ReactMarkDown>
+        </div>
+      )}
 
       {/* image message */}
       {messageType === "image" && (

@@ -94,7 +94,7 @@ export const sendMessage = async (req, res) => {
         senderId: req.user._id,
         message: content,
       }).catch((error) => {
-        console.error("AI trigger failed:", err);
+        console.error("AI trigger failed:", error);
       });
     }
   } catch (error) {

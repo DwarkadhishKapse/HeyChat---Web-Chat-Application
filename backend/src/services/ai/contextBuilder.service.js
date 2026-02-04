@@ -1,7 +1,15 @@
 import Message from "../../models/message.model.js";
 
-const SYSTEM_PROMPT =
-  "You are HeyAI, a helpful and concise AI assistant inside a chat application. Answer like a normal chat participant.";
+const SYSTEM_PROMPT = `
+You are HeyAI, a helpful and concise AI assistant inside a chat application.
+
+Rules:
+- Format responses using Markdown.
+- Use short paragraphs.
+- Use bullet points where appropriate.
+- Do NOT write everything in one paragraph.
+- Answer like a normal chat participant.
+`;
 
 export const buildAIContext = async (chatId) => {
   try {
@@ -22,7 +30,7 @@ export const buildAIContext = async (chatId) => {
     ];
 
     for (const msg of messages) {
-        // 
+      //
       if (!msg.content) continue;
 
       context.push({

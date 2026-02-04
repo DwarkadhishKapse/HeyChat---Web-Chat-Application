@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import EmojiPicker from "emoji-picker-react";
+import { useAuth } from "../../context/AuthContext";
 
 const ChatInput = ({ onSend, onSendFile, chatId, socket }) => {
+  const { user } = useAuth();
   const [message, setMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -24,7 +26,7 @@ const ChatInput = ({ onSend, onSendFile, chatId, socket }) => {
     // emit "typing" only once
     if (!isTyping && value.trim()) {
       setIsTyping(true);
-      socket.emit("typing", { chatId });
+      socket.emit("typing", { chatId, username: user.name });
     }
 
     // debounce stop typing
