@@ -5,17 +5,20 @@ import { useAuth } from "../../context/AuthContext";
 const UserList = ({ onSelectUser, isOpen }) => {
   const { user, authReady } = useAuth();
   const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
 
   useEffect(() => {
     if (!isOpen || !user?._id) return;
 
     const fetchUsers = async () => {
       try {
+        setUsersLoading(true);
         const data = await getUsers();
-        // remove current logged-in user
         setUsers(data.filter((u) => u._id !== user._id && !u.isAI));
       } catch (error) {
         console.error("Failed to load users");
+      } finally {
+        setUsersLoading(false);
       }
     };
 
@@ -24,10 +27,11 @@ const UserList = ({ onSelectUser, isOpen }) => {
 
   return (
     <div className="border-t border-gray-800">
-      {!user?._id && (
+      {usersLoading && (
         <p className="p-3 text-sm text-gray-500">Loading users...</p>
       )}
-      {user?._id &&
+
+      {!usersLoading &&
         users.map((u) => (
           <div
             key={u._id}
@@ -38,7 +42,7 @@ const UserList = ({ onSelectUser, isOpen }) => {
           </div>
         ))}
 
-      {isOpen && users.length === 0 && (
+      {!usersLoading && users.length === 0 && (
         <p className="p-3 text-sm text-gray-500">No users found</p>
       )}
     </div>
