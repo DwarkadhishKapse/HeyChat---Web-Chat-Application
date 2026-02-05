@@ -8,6 +8,7 @@ const UserList = ({ onSelectUser }) => {
 
   useEffect(() => {
     if (!user?._id) return;
+
     const fetchUsers = async () => {
       try {
         const data = await getUsers();
@@ -20,6 +21,8 @@ const UserList = ({ onSelectUser }) => {
 
     fetchUsers();
   }, [user]);
+
+  if (!user) return null;
 
   return (
     <div className="border-t border-gray-800">
