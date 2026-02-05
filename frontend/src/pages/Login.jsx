@@ -1,7 +1,7 @@
 import { React, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthLayout from "../components/auth/AuthLayout";
-import AuthInput from "../components/auth/AuthInput";
+import AuthInput from "../components/auth/AuthLayout";
 import { loginUser } from "../api/auth.api";
 import { useAuth } from "../context/AuthContext";
 
