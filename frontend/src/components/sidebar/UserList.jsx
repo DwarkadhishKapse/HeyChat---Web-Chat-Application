@@ -6,6 +6,10 @@ const UserList = ({ onSelectUser }) => {
   const { user } = useAuth();
   const [users, setUsers] = useState([]);
 
+  if (!user || !user._id) {
+    return null;
+  }
+  
   useEffect(() => {
     if (!user?._id) return;
 
@@ -21,8 +25,6 @@ const UserList = ({ onSelectUser }) => {
 
     fetchUsers();
   }, [user?._id]);
-
-  if (!user) return null;
 
   return (
     <div className="border-t border-gray-800">

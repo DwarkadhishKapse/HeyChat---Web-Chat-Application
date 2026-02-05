@@ -8,7 +8,7 @@ import socket from "./socket";
 import { useAuth } from "./context/AuthContext";
 
 const App = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
     if (user) {
@@ -28,6 +28,14 @@ const App = () => {
 
     socket.emit("setup", user._id);
   }, [socket, user]);
+
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center text-gray-400">
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <Routes>
