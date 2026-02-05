@@ -55,14 +55,16 @@ export const createOrGetChat = async (req, res) => {
 
 export const getMyChats = async (req, res) => {
   try {
+    // ensure HeyAI exists
     const heyAI = await heyAIUser();
 
-    const existingChat = await Chat.findOne({
+    // ensure HeyAI chat exists for this user
+    const aiChatExists = await Chat.findOne({
       isGroupChat: false,
       participants: { $size: 2, $all: [req.user._id, heyAI._id] },
     });
 
-    if (!existingChat) {
+    if (!aiChatExists) {
       await Chat.create({
         participants: [req.user._id, heyAI._id],
         isGroupChat: false,
@@ -70,11 +72,13 @@ export const getMyChats = async (req, res) => {
           [req.user._id]: 0,
           [heyAI._id]: 0,
         },
+        lastMessage: "HeyAI is ready 🤖",
+        lastMessageAt: new Date(),
       });
     }
 
+    // fetch all chats for user
     const chats = await Chat.find({
-      // find chat where im participate
       participants: req.user._id,
     })
       .populate("participants", "-password")
