@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import AuthLayout from "../auth/AuthLayout";
 import AuthInput from "../auth/AuthInput";
 import { loginUser } from "../../api/auth.api";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import api from "../api/axios";
 
 const Login = () => {
