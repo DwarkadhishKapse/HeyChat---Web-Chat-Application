@@ -20,7 +20,7 @@ const UserList = ({ onSelectUser }) => {
     };
 
     fetchUsers();
-  }, [user]);
+  }, [user?._id]);
 
   if (!user) return null;
 

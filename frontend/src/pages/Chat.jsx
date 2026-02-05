@@ -6,8 +6,11 @@ import MessageList from "../components/chat/MessageList";
 import { getMyChats } from "../api/chat.api";
 import { useEffect } from "react";
 import socket from "../socket";
+import { useAuth } from "../context/AuthContext";
 
 const Chat = () => {
+  const { user, loading } = useAuth();
+
   // this state used for - select which chat is currently open
   const [selectedChat, setSelectedChat] = useState(null);
 
@@ -59,6 +62,14 @@ const Chat = () => {
   };
 
   // -----------------------------------------------------
+
+  if (loading || !user) {
+    return (
+      <div className="h-screen flex items-center justify-center text-gray-400">
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <ChatLayout
