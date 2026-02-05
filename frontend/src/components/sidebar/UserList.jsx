@@ -3,30 +3,30 @@ import { getUsers } from "../../api/user.api";
 import { useAuth } from "../../context/AuthContext";
 
 const UserList = ({ onSelectUser }) => {
-  const { user } = useAuth();
+  const { user, authReady } = useAuth();
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    if (!user || !user?._id) return;
+    if (!authReady || !user?._id) return;
 
     const fetchUsers = async () => {
       try {
         const data = await getUsers();
-        // remove current logged-in user
         setUsers(data.filter((u) => u._id !== user._id && !u.isAI));
       } catch (error) {
-        console.error("Failed to load users");
+        console.error("Failed to load users", error);
       }
     };
 
     fetchUsers();
-  }, [user]);
+  }, [authReady, user]);
 
   return (
     <div className="border-t border-gray-800">
-      {!user?._id && (
-        <p className="p-3 text-sm text-gray-500">Loading users...</p>
+      {!authReady && (
+        <p className="p-3 text-sm text-gray-500">Preparing users…</p>
       )}
+
       {user?._id &&
         users.map((u) => (
           <div
