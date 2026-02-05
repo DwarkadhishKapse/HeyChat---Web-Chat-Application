@@ -26,17 +26,19 @@ const Chat = () => {
   // --------------------------------------------------
   // Loads chat when chat page opens
   useEffect(() => {
+    if (!user || loading) return;
+
     const fetchChats = async () => {
       try {
         const data = await getMyChats();
         setChats(data);
       } catch (error) {
-        console.error("Failed to load chats");
+        console.error("Failed to load chats", error);
       }
     };
 
     fetchChats();
-  }, []);
+  }, [user, loading]);
 
   useEffect(() => {
     socket.on("online-users", (users) => {
