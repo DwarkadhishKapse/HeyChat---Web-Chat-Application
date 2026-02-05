@@ -1,84 +1,54 @@
-import { React, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import AuthLayout from "../components/auth/AuthLayout";
-import AuthInput from "../components/auth/AuthInput";
-import { loginUser } from "../api/auth.api";
-import { useAuth } from "../context/AuthContext";
+import React, { useEffect, useState } from "react";
+import { getUsers } from "../../api/user.api";
+import { useAuth } from "../../context/AuthContext";
 import api from "../api/axios";
 
-const Login = () => {
-  const { setUser } = useAuth();
-  const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+const UserList = ({ onSelectUser, isOpen }) => {
+  const { user, authReady } = useAuth();
+  const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
 
-  const handleLogin = async () => {
-    try {
-      setLoading(true);
-      setError("");
+  useEffect(() => {
+    if (!isOpen || !user?._id) return;
 
-      const data = await loginUser({
-        email,
-        password,
-      });
+    const fetchUsers = async () => {
+      try {
+        setUsersLoading(true);
+        const data = await getUsers();
+        setUsers(data.filter((u) => u._id !== user._id && !u.isAI));
+      } catch (error) {
+        console.error("Failed to load users");
+      } finally {
+        setUsersLoading(false);
+      }
+    };
 
-      // store token
-      localStorage.setItem("token", data.token);
-
-      api.defaults.headers.common.Authorization = `Bearer ${data.token}`;
-
-      // This will update Auth state immediately
-      setUser(data.user);
-
-      navigate("/chat");
-    } catch (error) {
-      setError(error.response?.data?.message || "Login failed");
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchUsers();
+  }, [isOpen, user]);
 
   return (
-    <AuthLayout title="Login to HeyChat">
-      <div className="space-y-4">
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+    <div className="border-t border-gray-800">
+      {usersLoading && (
+        <p className="p-3 text-sm text-gray-500">Loading users...</p>
+      )}
 
-        <AuthInput
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <AuthInput
-          type="password"
-          placeholder="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-
-        <button
-          onClick={handleLogin}
-          disabled={loading}
-          className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-medium disabled:opacity-60"
-        >
-          {loading ? "Logging in..." : "Login"}
-        </button>
-
-        <p className="text-sm text-center text-gray-40">
-          Don't have an account?{" "}
-          <span
-            className="text-green-500 cursor-pointer"
-            onClick={() => navigate("/signup")}
+      {!usersLoading &&
+        users.map((u) => (
+          <div
+            key={u._id}
+            onClick={() => onSelectUser(u)}
+            className="p-3 cursor-pointer hover:bg-[#141414]"
           >
-            Sign up
-          </span>
-        </p>
-      </div>
-    </AuthLayout>
+            {u.name}
+          </div>
+        ))}
+
+      {!usersLoading && users.length === 0 && (
+        <p className="p-3 text-sm text-gray-500">No users found</p>
+      )}
+    </div>
   );
 };
 
-export default Login;
+export default UserList;
