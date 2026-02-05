@@ -14,13 +14,14 @@ const VideoModal = ({ videoUrl, onClose }) => {
       document.body.style.overflow = "auto";
     };
   }, [onClose]);
+
   return (
     <div
       className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center"
       onClick={onClose}
     >
       <div
-        className="relative max-w-[90%] max-h-[90%]"
+        className="relative max-w-[90vw] max-h-[90vh] flex items-center justify-center"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -34,7 +35,8 @@ const VideoModal = ({ videoUrl, onClose }) => {
         <video
           src={videoUrl}
           controls
-          className="max-h-[90vh] rounded-lg"
+          playsInline
+          className="max-w-full max-h-[90vh] rounded-lg bg-black"
         ></video>
       </div>
     </div>

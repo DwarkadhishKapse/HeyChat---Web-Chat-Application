@@ -12,7 +12,7 @@ const MessageBubble = ({
 }) => {
   const { messageType, content, fileUrl, fileName, fileSize } = message;
 
-  const mediaUrl = message.fileUrl;
+  const mediaUrl = fileUrl;
 
   let status = "✓";
   if (seen) status = "👀";
@@ -39,7 +39,10 @@ const MessageBubble = ({
         <img
           src={mediaUrl}
           alt="image"
-          onClick={() => onImageClick(mediaUrl)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onImageClick && onImageClick(mediaUrl);
+          }}
           className="rounded-lg max-h-60 cursor-pointer hover:opacity-90"
         />
       )}
@@ -49,7 +52,10 @@ const MessageBubble = ({
         <video
           src={mediaUrl}
           controls
-          onClick={() => onVideoClick(mediaUrl)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onVideoClick && onVideoClick(mediaUrl);
+          }}
           className="rounded-lg max-h-60 cursor-pointer"
         />
       )}
