@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import AuthLayout from "../components/auth/AuthLayout";
 import AuthInput from "../components/auth/AuthInput";
 import { loginUser } from "../api/auth.api";
+import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
+  const { setUser } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
@@ -24,6 +26,9 @@ const Login = () => {
 
       // store token
       localStorage.setItem("token", data.token);
+
+      // This will update Auth state immediately
+      setUser(data.user);
 
       navigate("/chat");
     } catch (error) {
