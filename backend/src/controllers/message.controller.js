@@ -122,7 +122,7 @@ export const sendFileMessage = async (req, res) => {
       chat: chatId,
       sender: req.user._id,
       messageType,
-      fileUrl: `/uploads/${file.filename}`,
+      fileUrl: file.path,
       fileName: file.originalname,
       fileType: file.mimetype,
       fileSize: file.size,
