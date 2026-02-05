@@ -15,13 +15,15 @@ const ImageModal = ({ imageUrl, onClose }) => {
     };
   }, [onClose]);
 
+  if (!imageUrl) return null;
+
   return (
     <div
       className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center"
       onClick={onClose}
     >
       <div
-        className="relative max-w-[90vw] max-h-[90vh] flex items-center justify-center"
+        className="relative max-w-[90%] max-h-[90%]"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -32,12 +34,7 @@ const ImageModal = ({ imageUrl, onClose }) => {
         </button>
 
         {/* image */}
-        <img
-          src={imageUrl}
-          alt="preview"
-          draggable={false}
-          className="max-w-full max-h-[90vh] rounded-lg object-contain select-none"
-        />
+        <img src={imageUrl} alt="preview" className="max-h-[90vh] rounded-lg" />
       </div>
     </div>
   );

@@ -65,7 +65,7 @@ const MessageList = ({ chatId, onNewMessage }) => {
       }
     };
 
-    const handleStopTyping = ({ chatId: typingChatId, username }) => {
+    const handleStopTyping = ({ chatId: typingChatId }) => {
       if (String(typingChatId) === String(chatId)) {
         setShowTyping(false);
         setTypingUser(null);
@@ -158,80 +158,23 @@ const MessageList = ({ chatId, onNewMessage }) => {
     if (!chatId) return;
 
     const handleSocketMessage = (message) => {
-      console.log("RECEIVED SOCKET MESSAGE:", message);
-
-      // ignore messages from other chats
       if (String(message.chat._id) !== String(chatId)) return;
-
-      // ignore messages sent by itself (already added via REST)
       if (String(message.sender._id) === String(user._id)) return;
 
       setMessages((prev) => [...prev, message]);
 
-      // tells backend - message is delivered
       socket.emit("message-delivered", {
         messageId: message._id,
         chatId,
       });
 
-      // if user already in chat and message arrived
-      // so message is instantly seen
       markSeen(chatId);
-
-      setLoading(false);
-      // tells Chat.jsx "I have a new message"
       onNewMessage(chatId, message.content);
     };
 
     socket.on("new-message", handleSocketMessage);
-
-    return () => {
-      socket.off("new-message", handleSocketMessage);
-    };
+    return () => socket.off("new-message", handleSocketMessage);
   }, [chatId, user._id]);
-
-  // sender listens for delivery update
-  useEffect(() => {
-    const handleDelivered = ({ messageId, chatId: deliveredChatId }) => {
-      if (String(deliveredChatId) !== String(chatId)) return;
-
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg._id === messageId ? { ...msg, delivered: true } : msg,
-        ),
-      );
-    };
-
-    socket.on("message-delivered", handleDelivered);
-    return () => socket.off("message-delivered", handleDelivered);
-  }, [chatId]);
-
-  // When messages load and chat is open then this useEffect will work
-  // when user open chat -> mark message as seen
-  useEffect(() => {
-    if (!chatId) return;
-
-    // user open this chat -> mark message as seen
-    markSeen(chatId);
-  }, [chatId]);
-
-  // Sender listens for seen update
-  useEffect(() => {
-    const handleSeen = ({ chatId: seenChatId }) => {
-      if (String(seenChatId) !== String(chatId)) return;
-
-      setMessages((prev) =>
-        prev.map((msg) =>
-          String(msg.sender._id) === String(user._id)
-            ? { ...msg, seen: true, delivered: true }
-            : msg,
-        ),
-      );
-    };
-
-    socket.on("messages-seen", handleSeen);
-    return () => socket.off("messages-seen", handleSeen);
-  }, [chatId, socket, user._id]);
 
   if (loading) {
     return (
@@ -255,7 +198,7 @@ const MessageList = ({ chatId, onNewMessage }) => {
             isOwn={String(msg.sender._id) === String(user._id)}
             delivered={msg.delivered}
             seen={msg.seen}
-            omImageClick={setImagePreview}
+            onImageClick={setImagePreview}
             onVideoClick={setVideoPreview}
           />
         ))}
@@ -287,6 +230,7 @@ const MessageList = ({ chatId, onNewMessage }) => {
         {/* taking message input */}
         <div ref={bottomRef}></div>
       </div>
+
       <ChatInput
         onSend={handleSendMessage}
         onSendFile={handleSendFile}
