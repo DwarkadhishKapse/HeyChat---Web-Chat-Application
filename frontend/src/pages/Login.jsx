@@ -27,6 +27,11 @@ const Login = () => {
       // store token
       localStorage.setItem("token", data.token);
 
+      // force axios to use token immediately
+      import("../api/axios").then(({ default: api }) => {
+        api.defaults.headers.common.Authorization = `Bearer ${data.token}`;
+      });
+
       // This will update Auth state immediately
       setUser(data.user);
 
