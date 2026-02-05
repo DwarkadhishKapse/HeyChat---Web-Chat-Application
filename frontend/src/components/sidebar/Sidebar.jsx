@@ -27,20 +27,20 @@ const Sidebar = ({ chats, setChats, selectedChat, onSelectChat }) => {
     }
   };
 
-  // useEffect(() => {
-  //   const fetchChats = async () => {
-  //     try {
-  //       const data = await getMyChats();
-  //       setChats(data);
-  //     } catch (error) {
-  //       console.error("Failed to load chats");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
+  useEffect(() => {
+    const fetchChats = async () => {
+      try {
+        const data = await getMyChats();
+        setChats(data);
+      } catch (error) {
+        console.error("Failed to load chats");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  //   fetchChats();
-  // }, []);
+    fetchChats();
+  }, []);
 
   useEffect(() => {
     // increment unread
