@@ -128,6 +128,23 @@ const MessageList = ({ chatId, onNewMessage }) => {
     }
   };
 
+  useEffect(() => {
+    const handleSeen = ({ chatId: seenChatId }) => {
+      if (String(seenChatId) !== String(chatId)) return;
+
+      setMessages((prev) =>
+        prev.map((msg) =>
+          String(msg.sender._id) === String(user._id)
+            ? { ...msg, seen: true, delivered: true }
+            : msg,
+        ),
+      );
+    };
+
+    socket.on("messages-seen", handleSeen);
+    return () => socket.off("messages-seen", handleSeen);
+  }, [chatId, user._id]);
+
   const handleSendFile = async (file) => {
     const formData = new FormData();
     formData.append("chatId", chatId);
