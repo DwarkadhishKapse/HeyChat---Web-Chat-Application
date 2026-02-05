@@ -138,12 +138,11 @@ export const sendFileMessage = async (req, res) => {
       .populate("chat");
 
     const io = getIO();
-
     io.to(chatId).emit("new-message", fullMessage);
 
     res.status(200).json(fullMessage);
   } catch (error) {
-    console.error(error);
+    console.error("SEND FILE ERROR:", error);
     res.status(500).json({ message: "File send failed" });
   }
 };
