@@ -15,8 +15,11 @@ const MessageBubble = ({
   const mediaUrl = fileUrl;
 
   let status = "✓";
-  if (seen) status = "👀";
-  else if (delivered) status = "✓✓";
+  if (seen) {
+    status = "👀";
+  } else if (delivered) {
+    status = "✓✓";
+  }
 
   return (
     <div
