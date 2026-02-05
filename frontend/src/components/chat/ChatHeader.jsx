@@ -7,7 +7,9 @@ const ChatHeader = ({ chat, onlineUsers }) => {
 
   if (!chat || !user) return null;
 
-  const otherUser = chat.participants.find((p) => p._id !== user._id);
+  const otherUser =
+    chat.participants.find((p) => p.isAI) ||
+    chat.participants.find((p) => String(p._id) !== String(user._id));
 
   const isOnline = otherUser.isAI ? true : onlineUsers.includes(otherUser._id);
 

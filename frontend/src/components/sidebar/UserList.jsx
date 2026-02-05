@@ -9,7 +9,7 @@ const UserList = ({ onSelectUser }) => {
   if (!user || !user._id) {
     return null;
   }
-  
+
   useEffect(() => {
     if (!user?._id) return;
 
@@ -17,7 +17,7 @@ const UserList = ({ onSelectUser }) => {
       try {
         const data = await getUsers();
         // remove current logged-in user
-        setUsers(data.filter((u) => u._id !== user._id));
+        setUsers(data.filter((u) => u._id !== user._id && !u.isAI));
       } catch (error) {
         console.error("Failed to load users");
       }

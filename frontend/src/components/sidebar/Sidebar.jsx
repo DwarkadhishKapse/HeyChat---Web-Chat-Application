@@ -103,7 +103,9 @@ const Sidebar = ({ chats, setChats, selectedChat, onSelectChat }) => {
       {/* Chat list */}
       <div className="flex-1 overflow-y-auto">
         {chats.map((chat) => {
-          const otherUser = chat.participants?.find((p) => p._id !== user?._id);
+          const otherUser =
+            chat.participants.find((p) => p.isAI) ||
+            chat.participants.find((p) => String(p._id) !== String(user._id));
 
           const unread =
             chat.unreadCount?.[user._id] ??
