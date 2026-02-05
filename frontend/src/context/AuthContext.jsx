@@ -8,6 +8,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [authReady, setAuthReady] = useState(false);
 
+
   const fetchMe = async () => {
     try {
       const res = await api.get("/auth/me");
@@ -17,25 +18,20 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
     } finally {
       setLoading(false);
-      setAuthReady(true); // ✅ AUTH IS NOW READY
     }
   };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-
     if (token) {
       fetchMe();
     } else {
       setLoading(false);
-      setAuthReady(true); // even without token
     }
   }, []);
 
   return (
-    <AuthContext.Provider
-      value={{ user, setUser, loading, authReady }} // expose authReady
-    >
+    <AuthContext.Provider value={{ user, setUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

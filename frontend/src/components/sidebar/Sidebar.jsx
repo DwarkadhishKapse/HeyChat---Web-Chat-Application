@@ -98,7 +98,9 @@ const Sidebar = ({ chats, setChats, selectedChat, onSelectChat }) => {
       </button>
 
       {/* User list */}
-      {showUsers && user && <UserList onSelectUser={handleStartChat} />}
+      {showUsers && user && (
+        <UserList onSelectUser={handleStartChat} isOpen={showUsers} />
+      )}
 
       {/* Chat list */}
       <div className="flex-1 overflow-y-auto">

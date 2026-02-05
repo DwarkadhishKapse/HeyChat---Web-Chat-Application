@@ -2,31 +2,31 @@ import React, { useEffect, useState } from "react";
 import { getUsers } from "../../api/user.api";
 import { useAuth } from "../../context/AuthContext";
 
-const UserList = ({ onSelectUser }) => {
+const UserList = ({ onSelectUser, isOpen }) => {
   const { user, authReady } = useAuth();
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    if (!authReady || !user?._id) return;
+    if (!isOpen || !user?._id) return;
 
     const fetchUsers = async () => {
       try {
         const data = await getUsers();
+        // remove current logged-in user
         setUsers(data.filter((u) => u._id !== user._id && !u.isAI));
       } catch (error) {
-        console.error("Failed to load users", error);
+        console.error("Failed to load users");
       }
     };
 
     fetchUsers();
-  }, [authReady, user]);
+  }, [isOpen, user]);
 
   return (
     <div className="border-t border-gray-800">
-      {!authReady && (
-        <p className="p-3 text-sm text-gray-500">Preparing users…</p>
+      {!user?._id && (
+        <p className="p-3 text-sm text-gray-500">Loading users...</p>
       )}
-
       {user?._id &&
         users.map((u) => (
           <div
@@ -38,7 +38,7 @@ const UserList = ({ onSelectUser }) => {
           </div>
         ))}
 
-      {users.length === 0 && (
+      {isOpen && users.length === 0 && (
         <p className="p-3 text-sm text-gray-500">No users found</p>
       )}
     </div>
