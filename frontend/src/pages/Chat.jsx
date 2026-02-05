@@ -65,14 +65,6 @@ const Chat = () => {
 
   // -----------------------------------------------------
 
-  if (loading || !user) {
-    return (
-      <div className="h-screen flex items-center justify-center text-gray-400">
-        Loading...
-      </div>
-    );
-  }
-
   return (
     <ChatLayout
       sidebar={
